@@ -3,6 +3,48 @@ import icon from '../../assets/icon.svg';
 import './App.css';
 
 function Hello() {
+  let mediaRecorder: any;
+  let audioChunks: any[] = [];
+
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = (event: any) => {
+        if (event.data.size > 0) {
+          audioChunks.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const arrayBuffer = await audioBlob.arrayBuffer();
+
+        // Send raw audio data to the main process
+        window.electron.ipcRenderer.sendMessage(
+          'save-audio',
+          new Uint8Array(arrayBuffer),
+        );
+
+        // Play the recorded audio
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audio.play();
+      };
+
+      mediaRecorder.start();
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+    }
+  }
+
+  function stopRecording() {
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+    }
+  }
+
   return (
     <div>
       <div className="Hello">
@@ -34,6 +76,8 @@ function Hello() {
             Donate
           </button>
         </a>
+        <button onClick={startRecording}>Start Recording</button>
+        <button onClick={stopRecording}>Stop Recording</button>
       </div>
     </div>
   );

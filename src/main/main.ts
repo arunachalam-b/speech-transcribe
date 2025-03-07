@@ -14,6 +14,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+import fs from 'fs';
 
 class AppUpdater {
   constructor() {
@@ -29,6 +30,18 @@ ipcMain.on('ipc-example', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
   console.log(msgTemplate(arg));
   event.reply('ipc-example', msgTemplate('pong'));
+});
+
+ipcMain.on('save-audio', (event, audioBuffer) => {
+  const filePath = path.join(app.getPath('desktop'), 'recorded_audio.wav');
+
+    fs.writeFile(filePath, Buffer.from(audioBuffer), (err) => {
+        if (err) {
+            console.error('Failed to save audio:', err);
+        } else {
+            console.log('Audio saved to', filePath);
+        }
+    });
 });
 
 if (process.env.NODE_ENV === 'production') {
