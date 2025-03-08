@@ -9,12 +9,14 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import { app, BrowserWindow, shell, ipcMain, globalShortcut } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import fs from 'fs';
+// const { keyboard } = require("@nut-tree-fork/nut-js");
+import { keyboard } from '@nut-tree-fork/nut-js';
 
 class AppUpdater {
   constructor() {
@@ -107,6 +109,16 @@ const createWindow = async () => {
     }
   });
 
+  globalShortcut.register("CommandOrControl+Shift+W", () => {
+    if (mainWindow?.isVisible()) {
+      keyboard.type("Hello world");
+      mainWindow.hide();
+    } else {
+      mainWindow?.show();
+      mainWindow?.focus();
+    }
+  });
+  
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -135,6 +147,11 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+app.on("will-quit", () => {
+  // Unregister all shortcuts when quitting
+  globalShortcut.unregisterAll();
 });
 
 app
