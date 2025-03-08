@@ -16,7 +16,7 @@ import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import fs from 'fs';
 // const { keyboard } = require("@nut-tree-fork/nut-js");
-import { keyboard } from '@nut-tree-fork/nut-js';
+// import { keyboard } from '@nut-tree-fork/nut-js';
 
 class AppUpdater {
   constructor() {
@@ -111,7 +111,7 @@ const createWindow = async () => {
 
   globalShortcut.register("CommandOrControl+Shift+W", () => {
     if (mainWindow?.isVisible()) {
-      keyboard.type("Hello world");
+      // keyboard.type("Hello world");
       mainWindow.hide();
     } else {
       mainWindow?.show();
