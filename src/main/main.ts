@@ -17,6 +17,8 @@ import { resolveHtmlPath } from './util';
 import fs from 'fs';
 // const { keyboard } = require("@nut-tree-fork/nut-js");
 // import { keyboard } from '@nut-tree-fork/nut-js';
+import clipboard from 'clipboardy';
+import { execSync } from 'child_process';
 
 class AppUpdater {
   constructor() {
@@ -37,13 +39,13 @@ ipcMain.on('ipc-example', async (event, arg) => {
 ipcMain.on('save-audio', (event, audioBuffer) => {
   const filePath = path.join(app.getPath('desktop'), 'recorded_audio.wav');
 
-    fs.writeFile(filePath, Buffer.from(audioBuffer), (err) => {
-        if (err) {
-            console.error('Failed to save audio:', err);
-        } else {
-            console.log('Audio saved to', filePath);
-        }
-    });
+  fs.writeFile(filePath, Buffer.from(audioBuffer), (err) => {
+    if (err) {
+      console.error('Failed to save audio:', err);
+    } else {
+      console.log('Audio saved to', filePath);
+    }
+  });
 });
 
 if (process.env.NODE_ENV === 'production') {
@@ -109,16 +111,25 @@ const createWindow = async () => {
     }
   });
 
-  globalShortcut.register("CommandOrControl+Shift+W", () => {
+  globalShortcut.register('CommandOrControl+Shift+W', () => {
     if (mainWindow?.isVisible()) {
-      // keyboard.type("Hello world");
+      setTimeout(() => {
+        clipboard.writeSync('Hello world');
+        try {
+          execSync('pbpaste');
+        } catch (error) {
+          const pasteCommand =
+            process.platform === 'darwin' ? 'Cmd+V' : 'Ctrl+V';
+          execSync(`xdotool key ${pasteCommand}`);
+        }
+      }, 100);
       mainWindow.hide();
     } else {
       mainWindow?.show();
       mainWindow?.focus();
     }
   });
-  
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -149,7 +160,7 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on("will-quit", () => {
+app.on('will-quit', () => {
   // Unregister all shortcuts when quitting
   globalShortcut.unregisterAll();
 });
