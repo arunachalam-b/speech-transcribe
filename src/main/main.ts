@@ -146,7 +146,7 @@ const createWindow = async () => {
     }
   });
 
-  globalShortcut.register('CommandOrControl+Shift+W', async () => {
+  globalShortcut.register('Alt+Shift+X', async () => {
     if (mainWindow?.isVisible()) {
       mainWindow.hide();
     } else {

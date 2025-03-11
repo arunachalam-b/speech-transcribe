@@ -1,15 +1,17 @@
-import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Route, MemoryRouter as Router, Routes } from 'react-router-dom';
 import './App.css';
-import { useState } from 'react';
+import { useSpacebarHold } from './hooks/useSpacebarHold';
 
 let mediaRecorder: any;
 let audioChunks: any[] = [];
 
 function Hello() {
   const [recording, setRecording] = useState(false);
+  const isHoldingSpace = useSpacebarHold();
 
   async function startRecording() {
-    console.log("Starting Recording... ");
+    console.log('Starting Recording... ');
     setRecording(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -29,7 +31,7 @@ function Hello() {
         window.electron.ipcRenderer.sendMessage(
           'save-audio',
           // new Uint8Array(arrayBuffer),
-          arrayBuffer
+          arrayBuffer,
         );
 
         // Play the recorded audio
@@ -46,21 +48,25 @@ function Hello() {
 
   function stopRecording() {
     if (mediaRecorder) {
-      console.log("Stopping Recording... ");
+      console.log('Stopping Recording... ');
       mediaRecorder.stop();
       mediaRecorder = null;
       setRecording(false);
     }
   }
 
+  useEffect(() => {
+    if (isHoldingSpace) {
+      startRecording();
+    } else {
+      stopRecording();
+    }
+  }, [isHoldingSpace]);
+
   return (
     <div>
-      {!recording && 
-        <button onClick={startRecording}>Start Recording</button>
-      }
-      {recording && 
-        <button onClick={stopRecording}>Stop Recording</button>
-      }
+      {!recording && <button onClick={startRecording}>Start Recording</button>}
+      {recording && <button onClick={stopRecording}>Stop Recording</button>}
     </div>
   );
 }
