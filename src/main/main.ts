@@ -15,10 +15,12 @@ import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import fs from 'fs';
-// const { keyboard } = require("@nut-tree-fork/nut-js");
-// import { keyboard } from '@nut-tree-fork/nut-js';
 import clipboard from 'clipboardy';
 import { execSync } from 'child_process';
+const createBuffer = require('audio-buffer-from');
+
+// let mediaRecorder: any;
+// let audioChunks: any[] = [];
 
 class AppUpdater {
   constructor() {
@@ -36,14 +38,30 @@ ipcMain.on('ipc-example', async (event, arg) => {
   event.reply('ipc-example', msgTemplate('pong'));
 });
 
-ipcMain.on('save-audio', (event, audioBuffer) => {
-  const filePath = path.join(app.getPath('desktop'), 'recorded_audio.wav');
+ipcMain.on('save-audio', (event, audioBuffer: ArrayBuffer) => {
+  // const tempPath = execSync('pwd').toString().trim();
+  const tempPath = app.getPath("home");
+  
+  const filePath = path.join(tempPath, 'audio_in.wav');
+  const outputPath = path.join(tempPath, 'audio_out.wav');
+  
+  try {
+    execSync(`rm ${filePath} ${outputPath}`);
+  } catch (error) {
+    console.log('Error while deleting files', error);
+  }
 
-  fs.writeFile(filePath, Buffer.from(audioBuffer), (err) => {
+  fs.writeFile(filePath, Buffer.from(audioBuffer), async (err) => {
     if (err) {
       console.error('Failed to save audio:', err);
     } else {
       console.log('Audio saved to', filePath);
+      try {
+        execSync(`ffmpeg -i ${filePath} -ar 16000 ${outputPath}`);
+      } catch (error) {
+        console.log('Error while converting audio', error);
+      }
+      transcribeAudio(outputPath);
     }
   });
 });
@@ -111,22 +129,25 @@ const createWindow = async () => {
     }
   });
 
-  globalShortcut.register('CommandOrControl+Shift+W', () => {
+  globalShortcut.register('CommandOrControl+Shift+W', async () => {
     if (mainWindow?.isVisible()) {
-      setTimeout(() => {
-        clipboard.writeSync('Hello world');
-        try {
-          execSync('pbpaste');
-        } catch (error) {
-          const pasteCommand =
-            process.platform === 'darwin' ? 'Cmd+V' : 'Ctrl+V';
-          execSync(`xdotool key ${pasteCommand}`);
-        }
-      }, 100);
+      // stopRecording();
+      // await new Promise((resolve, reject) => setTimeout(resolve, 2000));
+      // setTimeout(() => {
+      //   clipboard.writeSync('Hello world');
+      //   try {
+      //     execSync('pbpaste');
+      //   } catch (error) {
+      //     const pasteCommand =
+      //       process.platform === 'darwin' ? 'Cmd+V' : 'Ctrl+V';
+      //     execSync(`xdotool key ${pasteCommand}`);
+      //   }
+      // }, 100);
       mainWindow.hide();
     } else {
       mainWindow?.show();
       mainWindow?.focus();
+      // startRecording();
     }
   });
 
@@ -146,6 +167,27 @@ const createWindow = async () => {
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line
   new AppUpdater();
+};
+
+const transcribeAudio = async (filePath: string) => {
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  console.log('Transcribing audio...');
+  const transcribedText = execSync(
+    `whisper.cpp/build/bin/whisper-cli -m whisper.cpp/models/ggml-base.en.bin -f ${filePath} -np -nt`,
+  ).toString();
+  console.log('Transcribed Text', transcribedText);
+  setTimeout(() => {
+    clipboard.writeSync(transcribedText.trim());
+    try {
+      execSync('pbpaste');
+    } catch (error) {
+      const pasteCommand = process.platform === 'darwin' ? 'Cmd+V' : 'Ctrl+V';
+      execSync(`xdotool key ${pasteCommand}`);
+    }
+  }, 100);
+  if (mainWindow) {
+    mainWindow.hide();
+  }
 };
 
 /**
