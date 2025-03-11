@@ -8,19 +8,15 @@
  * When running `npm run build` or `npm run build:main`, this file is compiled to
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
-import path from 'path';
-import { app, BrowserWindow, shell, ipcMain, globalShortcut } from 'electron';
-import { autoUpdater } from 'electron-updater';
+import { execSync } from 'child_process';
+import clipboard from 'clipboardy';
+import { app, BrowserWindow, globalShortcut, ipcMain, shell } from 'electron';
 import log from 'electron-log';
+import { autoUpdater } from 'electron-updater';
+import fs from 'fs';
+import path from 'path';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import fs from 'fs';
-import clipboard from 'clipboardy';
-import { execSync } from 'child_process';
-const createBuffer = require('audio-buffer-from');
-
-// let mediaRecorder: any;
-// let audioChunks: any[] = [];
 
 class AppUpdater {
   constructor() {
@@ -32,6 +28,27 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
+const transcribeAudio = async (filePath: string) => {
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  console.log('Transcribing audio...');
+  const transcribedText = execSync(
+    `whisper.cpp/build/bin/whisper-cli -m whisper.cpp/models/ggml-base.en.bin -f ${filePath} -np -nt`,
+  ).toString();
+  console.log('Transcribed Text', transcribedText);
+  setTimeout(() => {
+    clipboard.writeSync(transcribedText.trim());
+    try {
+      execSync('pbpaste');
+    } catch (error) {
+      const pasteCommand = process.platform === 'darwin' ? 'Cmd+V' : 'Ctrl+V';
+      execSync(`xdotool key ${pasteCommand}`);
+    }
+  }, 100);
+  if (mainWindow) {
+    mainWindow.hide();
+  }
+};
+
 ipcMain.on('ipc-example', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
   console.log(msgTemplate(arg));
@@ -40,11 +57,11 @@ ipcMain.on('ipc-example', async (event, arg) => {
 
 ipcMain.on('save-audio', (event, audioBuffer: ArrayBuffer) => {
   // const tempPath = execSync('pwd').toString().trim();
-  const tempPath = app.getPath("home");
-  
+  const tempPath = app.getPath('home');
+
   const filePath = path.join(tempPath, 'audio_in.wav');
   const outputPath = path.join(tempPath, 'audio_out.wav');
-  
+
   try {
     execSync(`rm ${filePath} ${outputPath}`);
   } catch (error) {
@@ -131,23 +148,10 @@ const createWindow = async () => {
 
   globalShortcut.register('CommandOrControl+Shift+W', async () => {
     if (mainWindow?.isVisible()) {
-      // stopRecording();
-      // await new Promise((resolve, reject) => setTimeout(resolve, 2000));
-      // setTimeout(() => {
-      //   clipboard.writeSync('Hello world');
-      //   try {
-      //     execSync('pbpaste');
-      //   } catch (error) {
-      //     const pasteCommand =
-      //       process.platform === 'darwin' ? 'Cmd+V' : 'Ctrl+V';
-      //     execSync(`xdotool key ${pasteCommand}`);
-      //   }
-      // }, 100);
       mainWindow.hide();
     } else {
       mainWindow?.show();
       mainWindow?.focus();
-      // startRecording();
     }
   });
 
@@ -169,41 +173,17 @@ const createWindow = async () => {
   new AppUpdater();
 };
 
-const transcribeAudio = async (filePath: string) => {
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-  console.log('Transcribing audio...');
-  const transcribedText = execSync(
-    `whisper.cpp/build/bin/whisper-cli -m whisper.cpp/models/ggml-base.en.bin -f ${filePath} -np -nt`,
-  ).toString();
-  console.log('Transcribed Text', transcribedText);
-  setTimeout(() => {
-    clipboard.writeSync(transcribedText.trim());
-    try {
-      execSync('pbpaste');
-    } catch (error) {
-      const pasteCommand = process.platform === 'darwin' ? 'Cmd+V' : 'Ctrl+V';
-      execSync(`xdotool key ${pasteCommand}`);
-    }
-  }, 100);
-  if (mainWindow) {
-    mainWindow.hide();
-  }
-};
-
 /**
  * Add event listeners...
  */
 
 app.on('window-all-closed', () => {
-  // Respect the OSX convention of having the application in memory even
-  // after all windows have been closed
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
 
 app.on('will-quit', () => {
-  // Unregister all shortcuts when quitting
   globalShortcut.unregisterAll();
 });
 
@@ -212,8 +192,6 @@ app
   .then(() => {
     createWindow();
     app.on('activate', () => {
-      // On macOS it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
       if (mainWindow === null) createWindow();
     });
   })
