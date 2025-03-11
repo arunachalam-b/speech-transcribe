@@ -29,7 +29,6 @@ class AppUpdater {
 let mainWindow: BrowserWindow | null = null;
 
 const transcribeAudio = async (filePath: string) => {
-  await new Promise((resolve) => setTimeout(resolve, 2000));
   console.log('Transcribing audio...');
   const transcribedText = execSync(
     `whisper.cpp/build/bin/whisper-cli -m whisper.cpp/models/ggml-base.en.bin -f ${filePath} -np -nt`,

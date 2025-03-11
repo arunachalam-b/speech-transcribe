@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Route, MemoryRouter as Router, Routes } from 'react-router-dom';
 import './App.css';
-import { useSpacebarHold } from './hooks/useSpacebarHold';
+import useSpacebarHold from './hooks/useSpacebarHold';
 
 let mediaRecorder: any;
-let audioChunks: any[] = [];
+const audioChunks: any[] = [];
 
 function Hello() {
   const [recording, setRecording] = useState(false);
@@ -65,8 +65,16 @@ function Hello() {
 
   return (
     <div>
-      {!recording && <button onClick={startRecording}>Start Recording</button>}
-      {recording && <button onClick={stopRecording}>Stop Recording</button>}
+      {!recording && (
+        <button onClick={startRecording} type="button">
+          Start Recording
+        </button>
+      )}
+      {recording && (
+        <button onClick={stopRecording} type="button">
+          Stop Recording
+        </button>
+      )}
     </div>
   );
 }
