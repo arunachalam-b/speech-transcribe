@@ -182,8 +182,8 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on('will-quit', () => {
-  globalShortcut.unregisterAll();
+app.on('will-quit', (event) => {
+    event.preventDefault();
 });
 
 app
