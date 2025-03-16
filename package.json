@@ -1,9 +1,10 @@
 {
-  "name": "electron-react-boilerplate",
-  "description": "A foundation for scalable desktop apps",
+  "name": "speech-transcribe",
+  "description": "Transcribe your speech to text using whisper.cpp",
   "keywords": [
+    "speech",
+    "transcribe",
     "electron",
-    "boilerplate",
     "react",
     "typescript",
     "ts",
@@ -12,25 +13,25 @@
     "hot",
     "reload"
   ],
-  "homepage": "https://github.com/electron-react-boilerplate/electron-react-boilerplate#readme",
+  "homepage": "https://github.com/arunachalam-b/speech-transcribe#readme",
   "bugs": {
-    "url": "https://github.com/electron-react-boilerplate/electron-react-boilerplate/issues"
+    "url": "https://github.com/arunachalam-b/speech-transcribe/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/electron-react-boilerplate/electron-react-boilerplate.git"
+    "url": "git+https://github.com/arunachalam-b/speech-transcribe.git"
   },
   "license": "MIT",
   "author": {
-    "name": "Electron React Boilerplate Maintainers",
-    "email": "electronreactboilerplate@gmail.com",
-    "url": "https://electron-react-boilerplate.js.org"
+    "name": "Speech Transcribe Maintainers",
+    "email": "techie.arunachalam@gmail.com",
+    "url": "https://arunachalam-b.github.io/"
   },
   "contributors": [
     {
-      "name": "Amila Welihinda",
-      "email": "amilajack@gmail.com",
-      "url": "https://github.com/amilajack"
+      "name": "Arunachalam B",
+      "email": "techie.arunachalam@gmail.com",
+      "url": "https://github.com/arunachalam-b"
     }
   ],
   "main": "./.erb/dll/main.bundle.dev.js",
@@ -175,8 +176,8 @@
     "webpack-merge": "^5.9.0"
   },
   "build": {
-    "productName": "ElectronReact",
-    "appId": "org.erb.ElectronReact",
+    "productName": "SpeechTranscribe",
+    "appId": "org.erb.SpeechTranscribe",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
     "files": [
@@ -236,8 +237,8 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "electron-react-boilerplate",
-      "repo": "electron-react-boilerplate"
+      "owner": "arunachalam-b",
+      "repo": "speech-transcribe"
     },
     "extraFiles": [
       {
@@ -246,9 +247,6 @@
         "filter": ["**/*"]
       }
     ]
-  },
-  "collective": {
-    "url": "https://opencollective.com/electron-react-boilerplate-594"
   },
   "devEngines": {
     "runtime": {
