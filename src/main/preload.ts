@@ -29,7 +29,7 @@ const electronHandler = {
     },
     removeListener(channel: Channels, func: (...args: unknown[]) => void) {
       ipcRenderer.removeListener(channel, (_event, ...args) => func(...args));
-    }
+    },
   },
 };
 

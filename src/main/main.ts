@@ -9,7 +9,14 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import { execSync } from 'child_process';
-import { app, BrowserWindow, globalShortcut, ipcMain, shell, clipboard } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  clipboard,
+  globalShortcut,
+  ipcMain,
+  shell,
+} from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import fs from 'fs';
@@ -27,6 +34,9 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
+const isDebug =
+  process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
+
 const transcribeAudio = async (filePath: string) => {
   console.log('Transcribing audio...');
   const moveToRootFolder = isDebug ? '' : 'cd /opt/SpeechTranscribe &&';
@@ -39,7 +49,7 @@ const transcribeAudio = async (filePath: string) => {
     try {
       execSync('pbpaste');
     } catch (error) {
-      console.log("Failed to paste text", error);
+      console.log('Failed to paste text', error);
       const pasteCommand = process.platform === 'darwin' ? 'Cmd+V' : 'Ctrl+V';
       execSync(`xdotool key ${pasteCommand}`);
     }
@@ -91,9 +101,6 @@ if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
   sourceMapSupport.install();
 }
-
-const isDebug =
-  process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
 if (isDebug) {
   require('electron-debug')();

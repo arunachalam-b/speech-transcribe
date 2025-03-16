@@ -3,7 +3,8 @@ import { Route, MemoryRouter as Router, Routes } from 'react-router-dom';
 import './App.css';
 import useSpacebarHold from './hooks/useSpacebarHold';
 
-let mediaRecorder: any, audioChunks: any[] = [];
+let mediaRecorder: any;
+let audioChunks: any[] = [];
 
 function Hello() {
   const [recording, setRecording] = useState(false);
