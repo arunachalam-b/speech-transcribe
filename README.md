@@ -54,3 +54,4 @@ MIT © [Speech Transcribe](https://github.com/arunachalam-b/speech-transcribe)
 [github-actions-status]: https://github.com/arunachalam-b/speech-transcribe/workflows/Test/badge.svg
 [github-actions-url]: https://github.com/arunachalam-b/speech-transcribe/actions
 [github-tag-url]: https://github.com/arunachalam-b/speech-transcribe/releases/latest
+[github-tag-image]: https://img.shields.io/github/tag/arunachalam-b/speech-transcribe.svg?label=version
