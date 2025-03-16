@@ -3,12 +3,24 @@ import { Route, MemoryRouter as Router, Routes } from 'react-router-dom';
 import './App.css';
 import useSpacebarHold from './hooks/useSpacebarHold';
 
-let mediaRecorder: any;
-const audioChunks: any[] = [];
+let mediaRecorder: any, audioChunks: any[] = [];
 
 function Hello() {
   const [recording, setRecording] = useState(false);
+  // const [transcribedText, setTranscribedText] = useState('');
   const isHoldingSpace = useSpacebarHold();
+
+  // useEffect(() => {
+  //   const handleTranscriptionResult = (text: any) => {
+  //     setTranscribedText(text);
+  //   };
+
+  //   window.electron.ipcRenderer.on('transcription-result', handleTranscriptionResult);
+
+  //   return () => {
+  //     window.electron.ipcRenderer.removeListener('transcription-result', handleTranscriptionResult);
+  //   };
+  // }, []);
 
   async function startRecording() {
     console.log('Starting Recording... ');
@@ -35,9 +47,9 @@ function Hello() {
         );
 
         // Play the recorded audio
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
-        audio.play();
+        // const audioUrl = URL.createObjectURL(audioBlob);
+        // const audio = new Audio(audioUrl);
+        // audio.play();
       };
 
       mediaRecorder.start();
@@ -57,6 +69,7 @@ function Hello() {
 
   useEffect(() => {
     if (isHoldingSpace) {
+      audioChunks = [];
       startRecording();
     } else {
       stopRecording();
@@ -75,6 +88,10 @@ function Hello() {
           Stop Recording
         </button>
       )}
+      {/* <div>
+        <h3>Transcribed Text:</h3>
+        <p>{transcribedText}</p>
+      </div> */}
     </div>
   );
 }

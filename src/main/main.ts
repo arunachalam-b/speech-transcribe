@@ -9,8 +9,7 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import { execSync } from 'child_process';
-import clipboard from 'clipboardy';
-import { app, BrowserWindow, globalShortcut, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, globalShortcut, ipcMain, shell, clipboard } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import fs from 'fs';
@@ -31,19 +30,21 @@ let mainWindow: BrowserWindow | null = null;
 const transcribeAudio = async (filePath: string) => {
   console.log('Transcribing audio...');
   const transcribedText = execSync(
-    `whisper.cpp/build/bin/whisper-cli -m whisper.cpp/models/ggml-base.en.bin -f ${filePath} -np -nt`,
+    `cd /opt/ElectronReact && whisper.cpp/build/bin/whisper-cli -m whisper.cpp/models/ggml-base.en.bin -f ${filePath} -np -nt`,
   ).toString();
-  console.log('Transcribed Text', transcribedText);
+  console.log('Transcribed Text', transcribedText.trim());
   setTimeout(() => {
-    clipboard.writeSync(transcribedText.trim());
+    clipboard.writeText(transcribedText.trim());
     try {
       execSync('pbpaste');
     } catch (error) {
+      console.log("Failed to paste text", error);
       const pasteCommand = process.platform === 'darwin' ? 'Cmd+V' : 'Ctrl+V';
       execSync(`xdotool key ${pasteCommand}`);
     }
   }, 100);
   if (mainWindow) {
+    // mainWindow.webContents.send('transcription-result', transcribedText.trim());
     mainWindow.hide();
   }
 };
@@ -73,6 +74,9 @@ ipcMain.on('save-audio', (event, audioBuffer: ArrayBuffer) => {
     } else {
       console.log('Audio saved to', filePath);
       try {
+        // if (mainWindow) {
+        //   mainWindow.webContents.send('transcription-result', `ffmpeg -i ${filePath} -ar 16000 ${outputPath}`);
+        // }
         execSync(`ffmpeg -i ${filePath} -ar 16000 ${outputPath}`);
       } catch (error) {
         console.log('Error while converting audio', error);
@@ -182,9 +186,9 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on('will-quit', (event) => {
-    event.preventDefault();
-});
+// app.on('will-quit', (event) => {
+//     event.preventDefault();
+// });
 
 app
   .whenReady()

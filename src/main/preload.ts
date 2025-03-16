@@ -2,7 +2,7 @@
 /* eslint no-unused-vars: off */
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-export type Channels = 'ipc-example' | 'save-audio';
+export type Channels = 'ipc-example' | 'save-audio' | 'transcription-result';
 
 const electronHandler = {
   ipcRenderer: {
@@ -21,6 +21,15 @@ const electronHandler = {
     once(channel: Channels, func: (...args: unknown[]) => void) {
       ipcRenderer.once(channel, (_event, ...args) => func(...args));
     },
+    addListener(channel: Channels, func: (...args: unknown[]) => void) {
+      ipcRenderer.addListener(channel, (_event, ...args) => func(...args));
+    },
+    removeAllListeners(channel: Channels) {
+      ipcRenderer.removeAllListeners(channel);
+    },
+    removeListener(channel: Channels, func: (...args: unknown[]) => void) {
+      ipcRenderer.removeListener(channel, (_event, ...args) => func(...args));
+    }
   },
 };
 
