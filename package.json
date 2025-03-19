@@ -242,8 +242,8 @@
     },
     "extraFiles": [
       {
-        "from": "whisper.cpp",
-        "to": "whisper.cpp",
+        "from": "whisper",
+        "to": "whisper",
         "filter": ["**/*"]
       }
     ]

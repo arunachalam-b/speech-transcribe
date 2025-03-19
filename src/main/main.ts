@@ -41,7 +41,7 @@ const transcribeAudio = async (filePath: string) => {
   console.log('Transcribing audio...');
   const moveToRootFolder = isDebug ? '' : 'cd /opt/SpeechTranscribe &&';
   const transcribedText = execSync(
-    `${moveToRootFolder} whisper.cpp/build/bin/whisper-cli -m whisper.cpp/models/ggml-base.en.bin -f ${filePath} -np -nt`,
+    `${moveToRootFolder} whisper/whisper-cli -m whisper/ggml-base.en.bin -f ${filePath} -np -nt`,
   ).toString();
   console.log('Transcribed Text', transcribedText.trim());
   setTimeout(() => {
