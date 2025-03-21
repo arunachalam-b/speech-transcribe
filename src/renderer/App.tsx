@@ -84,6 +84,7 @@ function Hello() {
           width={400}
           height={100}
           barColor={waveLineColor}
+          gap={4}
         />
       ) : (
         <div
@@ -111,7 +112,7 @@ function Hello() {
           </button>
         )}
         <div>
-          <p>Press <span><b>Enter</b></span> key to transcribe</p>
+          <p><i>Press <span><b>Enter</b></span> key to transcribe</i></p>
         </div>
       </div>
     </div>
