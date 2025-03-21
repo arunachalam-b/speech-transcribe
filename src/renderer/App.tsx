@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Route, MemoryRouter as Router, Routes } from 'react-router-dom';
 import './App.css';
 import useSpacebarHold from './hooks/useSpacebarHold';
@@ -7,6 +7,13 @@ let mediaRecorder: any;
 let audioChunks: any[] = [];
 
 function Hello() {
+  const frequencyTemplete = useMemo(() => new Array(100).fill(1), []);
+
+  const freqIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const [frequencies, setFrequencies] =
+    useState<Array<number>>(frequencyTemplete);
+
   const [recording, setRecording] = useState(false);
   // const [transcribedText, setTranscribedText] = useState('');
   const isHoldingSpace = useSpacebarHold();
@@ -22,6 +29,41 @@ function Hello() {
   //     window.electron.ipcRenderer.removeListener('transcription-result', handleTranscriptionResult);
   //   };
   // }, []);
+
+  function startVisualization() {
+    freqIntervalRef.current = setInterval(() => {
+      setFrequencies((prevFreq) => [
+        ...prevFreq,
+        Math.floor(Math.random() * (100 - 10) + 10),
+      ]);
+
+      const lastFreq = document.getElementById('scrollContainerId');
+
+      if (lastFreq) {
+        lastFreq.scrollBy(250, 0);
+      }
+    }, 50);
+  }
+
+  function stopVisualization() {
+    if (freqIntervalRef.current) {
+      clearInterval(freqIntervalRef.current);
+    }
+
+    setFrequencies(frequencyTemplete);
+  }
+
+  useEffect(() => {
+    if (recording) {
+      startVisualization();
+    }
+
+    if (!recording) {
+      stopVisualization();
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recording]);
 
   async function startRecording() {
     console.log('Starting Recording... ');
@@ -78,21 +120,67 @@ function Hello() {
   }, [isHoldingSpace]);
 
   return (
-    <div>
-      {!recording && (
-        <button onClick={startRecording} type="button">
-          Start Recording
-        </button>
-      )}
-      {recording && (
-        <button onClick={stopRecording} type="button">
-          Stop Recording
-        </button>
-      )}
-      {/* <div>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        rowGap: 20,
+        alignItems: 'center',
+      }}
+    >
+      <div
+        id="scrollContainerId"
+        style={{
+          display: 'flex',
+          whiteSpace: 'nowrap',
+          overflow: 'auto',
+          width: 400,
+          height: 120,
+          scrollbarWidth: 'none',
+          alignItems: 'center',
+          columnGap: 3,
+        }}
+      >
+        <div
+          id="scrollChildParent"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            columnGap: 3,
+          }}
+        >
+          {frequencies.map((freq, index) => (
+            <div
+              // eslint-disable-next-line react/no-array-index-key
+              key={index}
+              style={{
+                width: 5,
+                height: freq,
+                background: 'white',
+                opacity: 0.4,
+                borderRadius: 20,
+                display: 'inline-block',
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      <div>
+        {!recording && (
+          <button onClick={startRecording} type="button">
+            Start Recording
+          </button>
+        )}
+        {recording && (
+          <button onClick={stopRecording} type="button">
+            Stop Recording
+          </button>
+        )}
+        {/* <div>
         <h3>Transcribed Text:</h3>
         <p>{transcribedText}</p>
       </div> */}
+      </div>
     </div>
   );
 }
