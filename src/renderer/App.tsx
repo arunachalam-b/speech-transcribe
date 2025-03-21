@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Route, MemoryRouter as Router, Routes } from 'react-router-dom';
+import { LiveAudioVisualizer } from 'react-audio-visualize';
+
 import './App.css';
 import useSpacebarHold from './hooks/useSpacebarHold';
 
-let mediaRecorder: any;
+// let mediaRecorder: any;
 let audioChunks: any[] = [];
+const waveLineColor = 'rgba(255, 255, 255, 0.75)';
 
 function Hello() {
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder>();
+
   const [recording, setRecording] = useState(false);
   // const [transcribedText, setTranscribedText] = useState('');
   const isHoldingSpace = useSpacebarHold();
@@ -28,15 +33,17 @@ function Hello() {
     setRecording(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream);
+      const mediaRecorderLocal = new MediaRecorder(stream);
 
-      mediaRecorder.ondataavailable = (event: any) => {
+      setMediaRecorder(mediaRecorderLocal);
+
+      mediaRecorderLocal.ondataavailable = (event: any) => {
         if (event.data.size > 0) {
           audioChunks.push(event.data);
         }
       };
 
-      mediaRecorder.onstop = async () => {
+      mediaRecorderLocal.onstop = async () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
         const arrayBuffer = await audioBlob.arrayBuffer();
 
@@ -53,7 +60,7 @@ function Hello() {
         // audio.play();
       };
 
-      mediaRecorder.start();
+      mediaRecorderLocal.start();
     } catch (error) {
       console.error('Error accessing microphone:', error);
     }
@@ -63,7 +70,8 @@ function Hello() {
     if (mediaRecorder) {
       console.log('Stopping Recording... ');
       mediaRecorder.stop();
-      mediaRecorder = null;
+      // mediaRecorder = null;
+      setMediaRecorder(undefined);
       setRecording(false);
     }
   }
@@ -75,24 +83,55 @@ function Hello() {
     } else {
       stopRecording();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHoldingSpace]);
 
   return (
-    <div>
-      {!recording && (
-        <button onClick={startRecording} type="button">
-          Start Recording
-        </button>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        rowGap: 20,
+        alignItems: 'center',
+      }}
+    >
+      {mediaRecorder ? (
+        <LiveAudioVisualizer
+          mediaRecorder={mediaRecorder}
+          width={400}
+          height={100}
+          barColor={waveLineColor}
+        />
+      ) : (
+        <div
+          style={{
+            width: 400,
+            height: 100,
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <span style={{ color: waveLineColor }}>
+            -----------------------------------------------------------------------
+          </span>
+        </div>
       )}
-      {recording && (
-        <button onClick={stopRecording} type="button">
-          Stop Recording
-        </button>
-      )}
-      {/* <div>
+      <div>
+        {!recording && (
+          <button onClick={startRecording} type="button">
+            Start Recording
+          </button>
+        )}
+        {recording && (
+          <button onClick={stopRecording} type="button">
+            Stop Recording
+          </button>
+        )}
+        {/* <div>
         <h3>Transcribed Text:</h3>
         <p>{transcribedText}</p>
       </div> */}
+      </div>
     </div>
   );
 }
