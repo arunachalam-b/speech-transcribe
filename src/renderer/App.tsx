@@ -1,41 +1,28 @@
 import { useEffect, useState } from 'react';
-import { Route, MemoryRouter as Router, Routes } from 'react-router-dom';
 import { LiveAudioVisualizer } from 'react-audio-visualize';
-
+import { Route, MemoryRouter as Router, Routes } from 'react-router-dom';
 import './App.css';
-import useSpacebarHold from './hooks/useSpacebarHold';
+import useKeyPress from './hooks/useKeyPress';
 
-// let mediaRecorder: any;
 let audioChunks: any[] = [];
 const waveLineColor = 'rgba(255, 255, 255, 0.75)';
 
 function Hello() {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder>();
-
   const [recording, setRecording] = useState(false);
-  // const [transcribedText, setTranscribedText] = useState('');
-  const isHoldingSpace = useSpacebarHold();
+  const enterPress = useKeyPress('Enter');
 
-  // useEffect(() => {
-  //   const handleTranscriptionResult = (text: any) => {
-  //     setTranscribedText(text);
-  //   };
-
-  //   window.electron.ipcRenderer.on('transcription-result', handleTranscriptionResult);
-
-  //   return () => {
-  //     window.electron.ipcRenderer.removeListener('transcription-result', handleTranscriptionResult);
-  //   };
-  // }, []);
+  const onFocus = () => {
+    startRecording();
+  };
 
   async function startRecording() {
     console.log('Starting Recording... ');
+    audioChunks = [];
     setRecording(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorderLocal = new MediaRecorder(stream);
-
-      setMediaRecorder(mediaRecorderLocal);
 
       mediaRecorderLocal.ondataavailable = (event: any) => {
         if (event.data.size > 0) {
@@ -47,20 +34,11 @@ function Hello() {
         const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
         const arrayBuffer = await audioBlob.arrayBuffer();
 
-        // Send raw audio data to the main process
-        window.electron.ipcRenderer.sendMessage(
-          'save-audio',
-          // new Uint8Array(arrayBuffer),
-          arrayBuffer,
-        );
-
-        // Play the recorded audio
-        // const audioUrl = URL.createObjectURL(audioBlob);
-        // const audio = new Audio(audioUrl);
-        // audio.play();
+        window.electron.ipcRenderer.sendMessage('save-audio', arrayBuffer);
       };
 
       mediaRecorderLocal.start();
+      setMediaRecorder(mediaRecorderLocal);
     } catch (error) {
       console.error('Error accessing microphone:', error);
     }
@@ -77,14 +55,19 @@ function Hello() {
   }
 
   useEffect(() => {
-    if (isHoldingSpace) {
-      audioChunks = [];
-      startRecording();
-    } else {
+    if (enterPress) {
       stopRecording();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHoldingSpace]);
+  }, [enterPress]);
+
+  useEffect(() => {
+    window.addEventListener('focus', onFocus);
+    onFocus();
+    return () => {
+      window.removeEventListener('focus', onFocus);
+    };
+  }, []);
 
   return (
     <div
@@ -112,7 +95,7 @@ function Hello() {
           }}
         >
           <span style={{ color: waveLineColor }}>
-            -----------------------------------------------------------------------
+            
           </span>
         </div>
       )}
@@ -127,10 +110,9 @@ function Hello() {
             Stop Recording
           </button>
         )}
-        {/* <div>
-        <h3>Transcribed Text:</h3>
-        <p>{transcribedText}</p>
-      </div> */}
+        <div>
+          <p>Press <span><b>Enter</b></span> key to transcribe</p>
+        </div>
       </div>
     </div>
   );
