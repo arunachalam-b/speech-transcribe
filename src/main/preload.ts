@@ -2,14 +2,14 @@
 /* eslint no-unused-vars: off */
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-export type Channels = 'ipc-example' | 'save-audio' | 'transcription-result';
+import { COMMUNICATION_CHANNELS } from '../constants';
 
 const electronHandler = {
   ipcRenderer: {
-    sendMessage(channel: Channels, ...args: unknown[]) {
+    sendMessage(channel: COMMUNICATION_CHANNELS, ...args: unknown[]) {
       ipcRenderer.send(channel, ...args);
     },
-    on(channel: Channels, func: (...args: unknown[]) => void) {
+    on(channel: COMMUNICATION_CHANNELS, func: (...args: unknown[]) => void) {
       const subscription = (_event: IpcRendererEvent, ...args: unknown[]) =>
         func(...args);
       ipcRenderer.on(channel, subscription);
@@ -18,16 +18,22 @@ const electronHandler = {
         ipcRenderer.removeListener(channel, subscription);
       };
     },
-    once(channel: Channels, func: (...args: unknown[]) => void) {
+    once(channel: COMMUNICATION_CHANNELS, func: (...args: unknown[]) => void) {
       ipcRenderer.once(channel, (_event, ...args) => func(...args));
     },
-    addListener(channel: Channels, func: (...args: unknown[]) => void) {
+    addListener(
+      channel: COMMUNICATION_CHANNELS,
+      func: (...args: unknown[]) => void,
+    ) {
       ipcRenderer.addListener(channel, (_event, ...args) => func(...args));
     },
-    removeAllListeners(channel: Channels) {
+    removeAllListeners(channel: COMMUNICATION_CHANNELS) {
       ipcRenderer.removeAllListeners(channel);
     },
-    removeListener(channel: Channels, func: (...args: unknown[]) => void) {
+    removeListener(
+      channel: COMMUNICATION_CHANNELS,
+      func: (...args: unknown[]) => void,
+    ) {
       ipcRenderer.removeListener(channel, (_event, ...args) => func(...args));
     },
   },

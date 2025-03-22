@@ -1,25 +1,34 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LiveAudioVisualizer } from 'react-audio-visualize';
 import { Route, MemoryRouter as Router, Routes } from 'react-router-dom';
+
 import './App.css';
 import useKeyPress from './hooks/useKeyPress';
+import { COMMUNICATION_CHANNELS } from '../constants';
+import { Spinner } from './components';
 
 let audioChunks: any[] = [];
 const waveLineColor = 'rgba(255, 255, 255, 0.75)';
 
 function Hello() {
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder>();
-  const [recording, setRecording] = useState(false);
   const enterPress = useKeyPress('Enter');
 
-  const onFocus = () => {
-    startRecording();
-  };
+  const isRecordingRef = useRef<boolean>(false);
+
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder>();
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [isTranscripting, setIsTranscripting] = useState<boolean>(false);
 
   async function startRecording() {
-    console.log('Starting Recording... ');
+    if (isRecordingRef.current) {
+      return;
+    }
+
+    console.log('Starting Recording...');
+
     audioChunks = [];
-    setRecording(true);
+    isRecordingRef.current = true;
+    setIsRecording(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorderLocal = new MediaRecorder(stream);
@@ -31,10 +40,13 @@ function Hello() {
       };
 
       mediaRecorderLocal.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        const arrayBuffer = await audioBlob.arrayBuffer();
+        const audioBlobLocal = new Blob(audioChunks, { type: 'audio/wav' });
+        const arrayBuffer = await audioBlobLocal.arrayBuffer();
 
-        window.electron.ipcRenderer.sendMessage('save-audio', arrayBuffer);
+        window.electron.ipcRenderer.sendMessage(
+          COMMUNICATION_CHANNELS.SAVE_AUDIO,
+          arrayBuffer,
+        );
       };
 
       mediaRecorderLocal.start();
@@ -46,13 +58,64 @@ function Hello() {
 
   function stopRecording() {
     if (mediaRecorder) {
-      console.log('Stopping Recording... ');
+      console.log('Stopping Recording...');
       mediaRecorder.stop();
-      // mediaRecorder = null;
       setMediaRecorder(undefined);
-      setRecording(false);
+      isRecordingRef.current = false;
+      setIsRecording(false);
+      setIsTranscripting(true);
     }
   }
+
+  const onFocus = () => {
+    startRecording();
+  };
+
+  function addFocusListener() {
+    window.addEventListener('focus', onFocus);
+  }
+
+  function removeFocusListener() {
+    window.removeEventListener('focus', onFocus);
+  }
+
+  function startEventListeners() {
+    window.electron.ipcRenderer.on(
+      COMMUNICATION_CHANNELS.TRANSCRIPTION_STATUS,
+      (status) => {
+        if (!status) {
+          return;
+        }
+
+        setIsTranscripting(status as boolean);
+      },
+    );
+  }
+
+  function tearDown() {
+    setIsTranscripting(false);
+  }
+
+  function onMount() {
+    onFocus();
+    addFocusListener();
+    startEventListeners();
+  }
+
+  function onUnmount() {
+    removeFocusListener();
+
+    tearDown();
+  }
+
+  useEffect(() => {
+    onMount();
+
+    return () => {
+      onUnmount();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (enterPress) {
@@ -60,14 +123,6 @@ function Hello() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enterPress]);
-
-  useEffect(() => {
-    window.addEventListener('focus', onFocus);
-    onFocus();
-    return () => {
-      window.removeEventListener('focus', onFocus);
-    };
-  }, []);
 
   return (
     <div
@@ -78,43 +133,68 @@ function Hello() {
         alignItems: 'center',
       }}
     >
-      {mediaRecorder ? (
-        <LiveAudioVisualizer
-          mediaRecorder={mediaRecorder}
-          width={400}
-          height={100}
-          barColor={waveLineColor}
-          gap={4}
-        />
-      ) : (
+      {!isTranscripting && (
+        <>
+          {mediaRecorder ? (
+            <LiveAudioVisualizer
+              mediaRecorder={mediaRecorder}
+              width={400}
+              height={100}
+              barColor={waveLineColor}
+              gap={4}
+            />
+          ) : (
+            <div
+              style={{
+                width: 400,
+                height: 100,
+                display: 'flex',
+              }}
+            >
+              <span style={{ color: waveLineColor }} />
+            </div>
+          )}
+          <div>
+            {!isRecording && (
+              <button onClick={startRecording} type="button">
+                Start Recording
+              </button>
+            )}
+            {isRecording && (
+              <button onClick={stopRecording} type="button">
+                Stop Recording
+              </button>
+            )}
+            <div>
+              <p>
+                <i>
+                  Press{' '}
+                  <span>
+                    <b>Enter</b>
+                  </span>{' '}
+                  key to transcribe
+                </i>
+              </p>
+            </div>
+          </div>
+        </>
+      )}
+
+      {isTranscripting && (
         <div
           style={{
-            width: 400,
-            height: 100,
             display: 'flex',
+            flexDirection: 'row',
             alignItems: 'center',
+            columnGap: 20,
           }}
         >
-          <span style={{ color: waveLineColor }}>
-            
+          <Spinner />
+          <span style={{ fontSize: 28, fontWeight: '700' }}>
+            Voice is translating to text...
           </span>
         </div>
       )}
-      <div>
-        {!recording && (
-          <button onClick={startRecording} type="button">
-            Start Recording
-          </button>
-        )}
-        {recording && (
-          <button onClick={stopRecording} type="button">
-            Stop Recording
-          </button>
-        )}
-        <div>
-          <p><i>Press <span><b>Enter</b></span> key to transcribe</i></p>
-        </div>
-      </div>
     </div>
   );
 }
