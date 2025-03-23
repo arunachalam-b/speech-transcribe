@@ -21,8 +21,10 @@ import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import fs from 'fs';
 import path from 'path';
+
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+import { COMMUNICATION_CHANNELS } from '../constants';
 
 class AppUpdater {
   constructor() {
@@ -37,13 +39,25 @@ let mainWindow: BrowserWindow | null = null;
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
+const updateTranscriptingStatus = (status: boolean) => {
+  mainWindow?.webContents.send(
+    COMMUNICATION_CHANNELS.TRANSCRIPTION_STATUS,
+    status,
+  );
+};
+
 const transcribeAudio = async (filePath: string) => {
   console.log('Transcribing audio...');
+  updateTranscriptingStatus(true);
   const moveToRootFolder = isDebug ? '' : 'cd /opt/SpeechTranscribe &&';
   const transcribedText = execSync(
     `${moveToRootFolder} whisper/whisper-cli -m whisper/ggml-base.en.bin -f ${filePath} -np -nt`,
   ).toString();
-  console.log('Transcribed Text', transcribedText.trim());
+
+  updateTranscriptingStatus(false);
+
+  console.log('Transcribed Text: ', transcribedText.trim());
+
   setTimeout(() => {
     clipboard.writeText(transcribedText.trim());
     try {
@@ -54,48 +68,54 @@ const transcribeAudio = async (filePath: string) => {
       execSync(`xdotool key ${pasteCommand}`);
     }
   }, 100);
+
   if (mainWindow) {
-    // mainWindow.webContents.send('transcription-result', transcribedText.trim());
+    // mainWindow.webContents.send(COMMUNICATION_CHANNELS.TRANSCRIPTION_RESULT, transcribedText.trim());
     mainWindow.hide();
   }
 };
 
-ipcMain.on('ipc-example', async (event, arg) => {
+ipcMain.on(COMMUNICATION_CHANNELS.IPC_EXAMPLE, async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
   console.log(msgTemplate(arg));
-  event.reply('ipc-example', msgTemplate('pong'));
+  event.reply(COMMUNICATION_CHANNELS.IPC_EXAMPLE, msgTemplate('pong'));
 });
 
-ipcMain.on('save-audio', (event, audioBuffer: ArrayBuffer) => {
-  // const tempPath = execSync('pwd').toString().trim();
-  const tempPath = app.getPath('home');
+ipcMain.on(
+  COMMUNICATION_CHANNELS.SAVE_AUDIO,
+  (event, audioBuffer: ArrayBuffer) => {
+    // const tempPath = execSync('pwd').toString().trim();
+    const tempPath = app.getPath('home');
 
-  const filePath = path.join(tempPath, 'audio_in.wav');
-  const outputPath = path.join(tempPath, 'audio_out.wav');
+    const filePath = path.join(tempPath, 'audio_in.wav');
+    const outputPath = path.join(tempPath, 'audio_out.wav');
 
-  try {
-    execSync(`rm ${filePath} ${outputPath}`);
-  } catch (error) {
-    console.log('Error while deleting files', error);
-  }
-
-  fs.writeFile(filePath, Buffer.from(audioBuffer), async (err) => {
-    if (err) {
-      console.error('Failed to save audio:', err);
-    } else {
-      console.log('Audio saved to', filePath);
-      try {
-        // if (mainWindow) {
-        //   mainWindow.webContents.send('transcription-result', `ffmpeg -i ${filePath} -ar 16000 ${outputPath}`);
-        // }
-        execSync(`ffmpeg -i ${filePath} -ar 16000 ${outputPath}`);
-      } catch (error) {
-        console.log('Error while converting audio', error);
-      }
-      transcribeAudio(outputPath);
+    try {
+      execSync(`rm ${filePath} ${outputPath}`);
+    } catch (error) {
+      console.log('Error while deleting files', error);
     }
-  });
-});
+
+    fs.writeFile(filePath, Buffer.from(audioBuffer), async (err) => {
+      if (err) {
+        console.error('Failed to save audio:', err);
+        updateTranscriptingStatus(false);
+      } else {
+        console.log('Audio saved to', filePath);
+        try {
+          // if (mainWindow) {
+          // mainWindow.webContents.send(COMMUNICATION_CHANNELS.TRANSCRIPTION_RESULT, `ffmpeg -i ${filePath} -ar 16000 ${outputPath}`);
+          // }
+          execSync(`ffmpeg -i ${filePath} -ar 16000 ${outputPath}`);
+        } catch (error) {
+          console.log('Error while converting audio', error);
+        }
+
+        transcribeAudio(outputPath);
+      }
+    });
+  },
+);
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');

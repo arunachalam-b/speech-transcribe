@@ -87,7 +87,8 @@
       "\\.(css|less|sass|scss)$": "identity-obj-proxy"
     },
     "setupFiles": [
-      "./.erb/scripts/check-build-exists.ts"
+      "./.erb/scripts/check-build-exists.ts",
+      "./src/__mocks__/jestSetupFile.js"
     ],
     "testEnvironment": "jsdom",
     "testEnvironmentOptions": {
@@ -109,7 +110,7 @@
     "react": "^18.2.0",
     "react-audio-visualize": "^1.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.16.0"
+    "react-router": "^7.4.0"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.3.0",
