@@ -24,7 +24,7 @@ const useKeyPress = (keyCode: string) => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [isHolding]);
+  }, [isHolding, keyCode]);
 
   return isHolding;
 };
