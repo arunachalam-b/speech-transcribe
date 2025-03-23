@@ -3,7 +3,18 @@ enum COMMUNICATION_CHANNELS {
   SAVE_AUDIO = 'save-audio',
   IPC_EXAMPLE = 'ipc-example',
   TRANSCRIPTION_RESULT = 'transcription-result',
+  UPDATE_RENDERER_ROUTE = 'update-renderer-route',
 }
 
-// eslint-disable-next-line import/prefer-default-export
-export { COMMUNICATION_CHANNELS };
+enum RENDERER_ROUTE_ACTION {
+  PUSH = 'push',
+  POP = 'pop',
+  BACK = 'back',
+}
+
+enum RENDERER_ROUTE {
+  ROOT = '/',
+  SETTINGS = '/settings',
+}
+
+export { COMMUNICATION_CHANNELS, RENDERER_ROUTE_ACTION, RENDERER_ROUTE };

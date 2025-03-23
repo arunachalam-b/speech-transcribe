@@ -21,6 +21,7 @@ import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import fs from 'fs';
 import path from 'path';
+
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { COMMUNICATION_CHANNELS } from '../constants';
@@ -162,8 +163,6 @@ const createWindow = async () => {
         : path.join(__dirname, '../../.erb/dll/preload.js'),
     },
   });
-
-  mainWindow.setMenuBarVisibility(false);
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
 
