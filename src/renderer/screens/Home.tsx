@@ -119,7 +119,6 @@ function Home() {
   useEffect(() => {
     if (enterPress) {
       stopRecording();
-      removeFocusListener();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enterPress]);

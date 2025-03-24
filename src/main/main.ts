@@ -67,11 +67,12 @@ const transcribeAudio = async (filePath: string) => {
       const pasteCommand = process.platform === 'darwin' ? 'Cmd+V' : 'Ctrl+V';
       execSync(`xdotool key ${pasteCommand}`);
     }
+    if (mainWindow) {
+      mainWindow.close();
+    }
   }, 100);
-
   if (mainWindow) {
-    // mainWindow.webContents.send(COMMUNICATION_CHANNELS.TRANSCRIPTION_RESULT, transcribedText.trim());
-    mainWindow.close();
+    mainWindow?.hide();
   }
 };
 
