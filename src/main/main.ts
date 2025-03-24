@@ -71,7 +71,7 @@ const transcribeAudio = async (filePath: string) => {
 
   if (mainWindow) {
     // mainWindow.webContents.send(COMMUNICATION_CHANNELS.TRANSCRIPTION_RESULT, transcribedText.trim());
-    mainWindow.hide();
+    mainWindow.close();
   }
 };
 
