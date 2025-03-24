@@ -193,7 +193,7 @@ function Home() {
         >
           <Spinner />
           <span style={{ fontSize: 28, fontWeight: '700' }}>
-            Voice is translating to text...
+            Your voice is being transcribed... Please hold on a moment
           </span>
         </div>
       )}
