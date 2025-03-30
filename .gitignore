@@ -29,3 +29,6 @@ npm-debug.log.*
 *.scss.d.ts
 
 *.en.bin
+
+# Models
+whisper/models

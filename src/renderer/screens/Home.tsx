@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { LiveAudioVisualizer } from 'react-audio-visualize';
 
 import '../App.css';
 import useKeyPress from '../hooks/useKeyPress';
-import { COMMUNICATION_CHANNELS } from '../../constants';
+import { COMMUNICATION_CHANNELS, RENDERER_ROUTE } from '../../constants';
 import { Spinner } from '../components';
 
 let audioChunks: any[] = [];
 const waveLineColor = 'rgba(255, 255, 255, 0.75)';
 
 function Home() {
+  const navigate = useNavigate();
+
   const enterPress = useKeyPress('Enter');
 
   const isRecordingRef = useRef<boolean>(false);
@@ -89,16 +92,34 @@ function Home() {
         setIsTranscripting(status as boolean);
       },
     );
+
+    window.electron.ipcRenderer.on(
+      COMMUNICATION_CHANNELS.SELECTED_MODEL,
+      (model) => {
+        if (!model) {
+          alert('Please select a model to transcribe');
+
+          navigate(RENDERER_ROUTE.SETTINGS);
+        }
+      },
+    );
   }
 
   function tearDown() {
     setIsTranscripting(false);
   }
 
+  function getSelectedModel() {
+    window.electron.ipcRenderer.sendMessage(
+      COMMUNICATION_CHANNELS.SELECTED_MODEL,
+    );
+  }
+
   function onMount() {
     onFocus();
     addFocusListener();
     startEventListeners();
+    getSelectedModel();
   }
 
   function onUnmount() {
@@ -156,7 +177,7 @@ function Home() {
               <span style={{ color: waveLineColor }} />
             </div>
           )}
-          <div>
+          <div className="actionContainer">
             {!isRecording && (
               <button onClick={startRecording} type="button">
                 Start Recording
