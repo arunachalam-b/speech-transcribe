@@ -14,6 +14,7 @@ function Home() {
   const navigate = useNavigate();
 
   const enterPress = useKeyPress('Enter');
+  const numpadEnter = useKeyPress('NumpadEnter');
 
   const isRecordingRef = useRef<boolean>(false);
 
@@ -138,11 +139,11 @@ function Home() {
   }, []);
 
   useEffect(() => {
-    if (enterPress) {
+    if (enterPress || numpadEnter) {
       stopRecording();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enterPress]);
+  }, [enterPress, numpadEnter]);
 
   return (
     <div
