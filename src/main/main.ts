@@ -56,24 +56,20 @@ const transcribeAudio = async (filePath: string) => {
 
   updateTranscriptingStatus(false);
 
-  console.log('Transcribed Text: ', transcribedText.trim());
+  const finalTranscribedText = transcribedText.trim();
+  console.log('Transcribed Text: ', finalTranscribedText);
 
   setTimeout(() => {
-    clipboard.writeText(transcribedText.trim());
-    try {
-      execSync('pbpaste');
-    } catch (error) {
-      console.log('Failed to paste text', error);
-      const pasteCommand = process.platform === 'darwin' ? 'Cmd+V' : 'Ctrl+V';
-      execSync(`xdotool key ${pasteCommand}`);
-    }
+    clipboard.writeText(finalTranscribedText);
+    setTimeout(() => {
+      if (mainWindow) {
+        mainWindow.close();
+      }  
+    }, 1000);
     if (mainWindow) {
-      mainWindow.close();
+      mainWindow.hide();
     }
   }, 100);
-  if (mainWindow) {
-    mainWindow?.hide();
-  }
 };
 
 ipcMain.on(COMMUNICATION_CHANNELS.IPC_EXAMPLE, async (event, arg) => {
