@@ -11,6 +11,7 @@ const waveLineColor = 'rgba(255, 255, 255, 0.75)';
 
 function Home() {
   const enterPress = useKeyPress('Enter');
+  const numpadEnter = useKeyPress('NumpadEnter');
 
   const isRecordingRef = useRef<boolean>(false);
 
@@ -117,11 +118,11 @@ function Home() {
   }, []);
 
   useEffect(() => {
-    if (enterPress) {
+    if (enterPress || numpadEnter) {
       stopRecording();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enterPress]);
+  }, [enterPress, numpadEnter]);
 
   return (
     <div
