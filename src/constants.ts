@@ -10,6 +10,7 @@ enum COMMUNICATION_CHANNELS {
   IS_MODEL_EXIST = 'is-model-exist',
   DONWLOAD_MODEL = 'download-model',
   SELECTED_MODEL = 'selected-model',
+  MODEL_DOWNLOAD_STATUS = 'model-download-status'
 }
 
 enum RENDERER_ROUTE_ACTION {

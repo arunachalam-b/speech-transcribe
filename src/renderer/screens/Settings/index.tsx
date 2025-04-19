@@ -19,6 +19,7 @@ function Settings() {
   const [isSelectedModelExists, setIsSelectedModelExists] =
     useState<boolean>(true);
   const [isDownloadingModel, setIsDownloadingModel] = useState<boolean>(false);
+  const [message, setMessage] = useState(null);
 
   function startChannelListeners() {
     window.electron.ipcRenderer.on(
@@ -56,6 +57,13 @@ function Settings() {
         }
 
         setIsDownloadingModel(false);
+      },
+    );
+
+    window.electron.ipcRenderer.on(
+      COMMUNICATION_CHANNELS.MODEL_DOWNLOAD_STATUS,
+      (data: any) => {
+        setMessage(data);
       },
     );
   }
@@ -162,8 +170,13 @@ function Settings() {
             Download
           </button>
         )}
-        {isDownloadingModel && <Spinner />}
       </div>
+      {isDownloadingModel && (
+        <div className="content">
+          <Spinner />
+          <p>{message}</p>
+        </div>
+      )}
     </div>
   );
 }

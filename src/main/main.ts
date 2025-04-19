@@ -8,7 +8,7 @@
  * When running `npm run build` or `npm run build:main`, this file is compiled to
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
-import { execSync } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import {
   app,
   BrowserWindow,
@@ -152,7 +152,7 @@ ipcMain.on(COMMUNICATION_CHANNELS.IS_MODEL_EXIST, (event, model) => {
   }
 });
 
-ipcMain.on(COMMUNICATION_CHANNELS.DONWLOAD_MODEL, (event, model) => {
+ipcMain.on(COMMUNICATION_CHANNELS.DONWLOAD_MODEL, async (event, model) => {
   const modelBasePath = getModelPath();
   const isModelDirExists = isFileExists(modelBasePath);
   const modelBinary = `ggml-${model}.bin`;
@@ -175,8 +175,34 @@ ipcMain.on(COMMUNICATION_CHANNELS.DONWLOAD_MODEL, (event, model) => {
   let status;
 
   try {
-    execSync(`cp ${APP_WHISPER_PATH}/download-ggml-model.sh ${modelBasePath}`)
-    execSync(`cd ${modelBasePath} && ./download-ggml-model.sh ${model}`);
+    execSync(`cp ${APP_WHISPER_PATH}/download-ggml-model.sh ${modelBasePath}`);
+    execSync(`cd ${modelBasePath}`);
+    await new Promise((resolve, reject) => {
+      const child = spawn(`cd ${modelBasePath} && ./download-ggml-model.sh  ${model}`, {shell: true});
+      child.stdout.on('data', (data) => {
+        console.log(`Child says: ${data}`);
+      });
+      
+      child.stderr.on('data', (data) => {
+        const latestStatus = String(data);
+        if (latestStatus.includes("%")) {
+          mainWindow?.webContents.send(
+            COMMUNICATION_CHANNELS.MODEL_DOWNLOAD_STATUS,
+            `Downloading ${latestStatus.split("%")[0].slice(-3)}%...`,
+          );
+        }
+      });
+      
+      child.on('close', (code) => {
+        console.log(`Child exited with code ${code}`);
+        resolve(code);
+      });
+
+      child.on('error', (code) => {
+        console.error(`Child error: ${code}`);
+        reject(code);
+      });
+    });
     execSync(`rm ${modelBasePath}/download-ggml-model.sh`);
     status = true;
     store.set(storageKeys.SELECTED_MODEL, model);
