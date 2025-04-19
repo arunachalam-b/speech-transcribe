@@ -147,8 +147,8 @@ ipcMain.on(COMMUNICATION_CHANNELS.IS_MODEL_EXIST, (event, model) => {
   }
 
   if (!isModelExists) {
-    store.delete(storageKeys.SELECTED_MODEL);
-    store.delete(storageKeys.SELECTED_MODEL_PATH);
+    store.delete(storageKeys.SELECTED_MODEL as never);
+    store.delete(storageKeys.SELECTED_MODEL_PATH as never);
   }
 });
 
