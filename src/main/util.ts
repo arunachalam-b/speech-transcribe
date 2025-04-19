@@ -2,6 +2,7 @@
 import { URL } from 'url';
 import path from 'path';
 import fs from 'fs';
+import { app } from 'electron';
 
 function resolveHtmlPath(htmlFileName: string) {
   if (process.env.NODE_ENV === 'development') {
@@ -19,4 +20,12 @@ function isFileExists(filePath: string): boolean {
   return isExists;
 }
 
-export { resolveHtmlPath, isFileExists };
+function getUserPath(): string {
+  return app.getPath('userData');
+}
+
+function getModelPath(): string {
+  return `${getUserPath()}/models`;
+}
+
+export { resolveHtmlPath, isFileExists, getUserPath, getModelPath };

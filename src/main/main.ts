@@ -26,7 +26,7 @@ import Store from 'electron-store';
 import type { Schema } from 'electron-store';
 
 import MenuBuilder from './menu';
-import { isFileExists, resolveHtmlPath } from './util';
+import { getModelPath, isFileExists, resolveHtmlPath } from './util';
 import {
   APP_MODEL_PATH,
   APP_WHISPER_PATH,
@@ -102,7 +102,7 @@ ipcMain.on(
   COMMUNICATION_CHANNELS.SAVE_AUDIO,
   (event, audioBuffer: ArrayBuffer) => {
     // const tempPath = execSync('pwd').toString().trim();
-    const tempPath = app.getPath('home');
+    const tempPath = `${app.getPath('userData')}/blob_storage`;
 
     const filePath = path.join(tempPath, 'audio_in.wav');
     const outputPath = path.join(tempPath, 'audio_out.wav');
@@ -135,7 +135,7 @@ ipcMain.on(
 );
 
 ipcMain.on(COMMUNICATION_CHANNELS.IS_MODEL_EXIST, (event, model) => {
-  const modelPath = `${APP_MODEL_PATH}/ggml-${model}.bin`;
+  const modelPath = `${getModelPath()}/ggml-${model}.bin`;
 
   const isModelExists = isFileExists(modelPath);
 
@@ -153,13 +153,15 @@ ipcMain.on(COMMUNICATION_CHANNELS.IS_MODEL_EXIST, (event, model) => {
 });
 
 ipcMain.on(COMMUNICATION_CHANNELS.DONWLOAD_MODEL, (event, model) => {
-  const isModelDirExists = isFileExists(APP_MODEL_PATH);
+  const modelBasePath = getModelPath();
+  const isModelDirExists = isFileExists(modelBasePath);
+  const modelBinary = `ggml-${model}.bin`;
 
   if (!isModelDirExists) {
-    execSync(`mkdir ${APP_MODEL_PATH}`);
+    execSync(`mkdir ${modelBasePath}`);
   }
 
-  const modelPath = `${APP_MODEL_PATH}/ggml-${model}.bin`;
+  const modelPath = `${modelBasePath}/${modelBinary}`;
 
   const isModelExists = isFileExists(modelPath);
 
@@ -173,7 +175,9 @@ ipcMain.on(COMMUNICATION_CHANNELS.DONWLOAD_MODEL, (event, model) => {
   let status;
 
   try {
-    execSync(`cd ${APP_WHISPER_PATH} && ./download-ggml-model.sh ${model}`);
+    execSync(`cp ${APP_WHISPER_PATH}/download-ggml-model.sh ${modelBasePath}`)
+    execSync(`cd ${modelBasePath} && ./download-ggml-model.sh ${model}`);
+    execSync(`rm ${modelBasePath}/download-ggml-model.sh`);
     status = true;
     store.set(storageKeys.SELECTED_MODEL, model);
     store.set(storageKeys.SELECTED_MODEL_PATH, modelPath);
