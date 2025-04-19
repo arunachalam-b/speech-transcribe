@@ -30,7 +30,7 @@ const storageKeys = {
 
 const APP_ROOT_PATH = isDebug ? '' : '/opt/SpeechTranscribe';
 const APP_WHISPER_PATH = isDebug ? 'whisper' : `${APP_ROOT_PATH}/whisper`;
-const APP_MODEL_PATH = `${APP_WHISPER_PATH}/models`;
+const APP_MODEL_PATH = `${APP_WHISPER_PATH}`;
 
 const AVAILABLE_MODELS: Array<string> = [
   'tiny',
