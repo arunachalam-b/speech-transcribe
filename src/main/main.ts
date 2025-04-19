@@ -181,9 +181,14 @@ ipcMain.on(COMMUNICATION_CHANNELS.DONWLOAD_MODEL, async (event, model) => {
       const child = spawn(`cd ${modelBasePath} && ./download-ggml-model.sh  ${model}`, {shell: true});
       child.stdout.on('data', (data) => {
         console.log(`Child says: ${data}`);
+        mainWindow?.webContents.send(
+          COMMUNICATION_CHANNELS.MODEL_DOWNLOAD_STATUS,
+          `Model download in-progress...`,
+        );
       });
       
       child.stderr.on('data', (data) => {
+        console.log(`Latest status update: ${data}`);
         const latestStatus = String(data);
         if (latestStatus.includes("%")) {
           mainWindow?.webContents.send(
@@ -195,11 +200,19 @@ ipcMain.on(COMMUNICATION_CHANNELS.DONWLOAD_MODEL, async (event, model) => {
       
       child.on('close', (code) => {
         console.log(`Child exited with code ${code}`);
+        mainWindow?.webContents.send(
+          COMMUNICATION_CHANNELS.MODEL_DOWNLOAD_STATUS,
+          `Model download complete`,
+        );
         resolve(code);
       });
 
       child.on('error', (code) => {
         console.error(`Child error: ${code}`);
+        mainWindow?.webContents.send(
+          COMMUNICATION_CHANNELS.MODEL_DOWNLOAD_STATUS,
+          `Failed to complete downloading the model`,
+        );
         reject(code);
       });
     });
