@@ -30,4 +30,6 @@ npm-debug.log.*
 
 *.en.bin
 
+# Models
+whisper/models
 speech_transcribe_models

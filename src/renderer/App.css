@@ -30,9 +30,16 @@ button {
   transition: all ease-in 0.1s;
   cursor: pointer;
   opacity: 0.9;
+  width: fit-content;
 }
 
 button:hover {
   transform: scale(1.05);
   opacity: 1;
+}
+
+.actionContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }

@@ -21,10 +21,25 @@ import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import fs from 'fs';
 import path from 'path';
+import Store from 'electron-store';
+
+import type { Schema } from 'electron-store';
 
 import MenuBuilder from './menu';
-import { resolveHtmlPath } from './util';
-import { COMMUNICATION_CHANNELS } from '../constants';
+import { getModelPath, isFileExists, resolveHtmlPath } from './util';
+import {
+  APP_MODEL_PATH,
+  APP_WHISPER_PATH,
+  COMMUNICATION_CHANNELS,
+  storageKeys,
+} from '../constants';
+
+import type { AppStoreType } from '../types';
+
+const store = new Store<Schema<AppStoreType>>({
+  [storageKeys.SELECTED_MODEL]: undefined,
+  [storageKeys.SELECTED_MODEL_PATH]: undefined,
+});
 
 class AppUpdater {
   constructor() {
@@ -49,10 +64,15 @@ const updateTranscriptingStatus = (status: boolean) => {
 const transcribeAudio = async (filePath: string) => {
   console.log('Transcribing audio...');
   updateTranscriptingStatus(true);
+  const modelPath = store.get(storageKeys.SELECTED_MODEL_PATH);
+
   const moveToRootFolder = isDebug ? '' : 'cd /opt/SpeechTranscribe &&';
-  const transcribedText = execSync(
-    `${moveToRootFolder} whisper/whisper-cli -m whisper/ggml-base.en.bin -f ${filePath} -np -nt`,
-  ).toString();
+
+  const transcribeCommand = `${moveToRootFolder} whisper/whisper-cli -m ${modelPath} -f ${filePath} -np -nt`;
+
+  console.info('Transcribe command: ', transcribeCommand);
+
+  const transcribedText = execSync(transcribeCommand).toString();
 
   updateTranscriptingStatus(false);
 
@@ -82,7 +102,7 @@ ipcMain.on(
   COMMUNICATION_CHANNELS.SAVE_AUDIO,
   (event, audioBuffer: ArrayBuffer) => {
     // const tempPath = execSync('pwd').toString().trim();
-    const tempPath = app.getPath('home');
+    const tempPath = `${app.getPath('userData')}/blob_storage`;
 
     const filePath = path.join(tempPath, 'audio_in.wav');
     const outputPath = path.join(tempPath, 'audio_out.wav');
@@ -113,6 +133,68 @@ ipcMain.on(
     });
   },
 );
+
+ipcMain.on(COMMUNICATION_CHANNELS.IS_MODEL_EXIST, (event, model) => {
+  const modelPath = `${getModelPath()}/ggml-${model}.bin`;
+
+  const isModelExists = isFileExists(modelPath);
+
+  event.reply(COMMUNICATION_CHANNELS.IS_MODEL_EXIST, isModelExists);
+
+  if (isModelExists) {
+    store.set(storageKeys.SELECTED_MODEL, model);
+    store.set(storageKeys.SELECTED_MODEL_PATH, modelPath);
+  }
+
+  if (!isModelExists) {
+    store.delete(storageKeys.SELECTED_MODEL);
+    store.delete(storageKeys.SELECTED_MODEL_PATH);
+  }
+});
+
+ipcMain.on(COMMUNICATION_CHANNELS.DONWLOAD_MODEL, (event, model) => {
+  const modelBasePath = getModelPath();
+  const isModelDirExists = isFileExists(modelBasePath);
+  const modelBinary = `ggml-${model}.bin`;
+
+  if (!isModelDirExists) {
+    execSync(`mkdir ${modelBasePath}`);
+  }
+
+  const modelPath = `${modelBasePath}/${modelBinary}`;
+
+  const isModelExists = isFileExists(modelPath);
+
+  if (isModelExists) {
+    event.reply(COMMUNICATION_CHANNELS.DONWLOAD_MODEL, 'Model already exists');
+    store.set(storageKeys.SELECTED_MODEL, model);
+    store.set(storageKeys.SELECTED_MODEL_PATH, modelPath);
+    return;
+  }
+
+  let status;
+
+  try {
+    execSync(`cp ${APP_WHISPER_PATH}/download-ggml-model.sh ${modelBasePath}`)
+    execSync(`cd ${modelBasePath} && ./download-ggml-model.sh ${model}`);
+    execSync(`rm ${modelBasePath}/download-ggml-model.sh`);
+    status = true;
+    store.set(storageKeys.SELECTED_MODEL, model);
+    store.set(storageKeys.SELECTED_MODEL_PATH, modelPath);
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Model download error: ', { err, model, modelPath });
+    status = false;
+  }
+
+  event.reply(COMMUNICATION_CHANNELS.DONWLOAD_MODEL, status);
+});
+
+ipcMain.on(COMMUNICATION_CHANNELS.SELECTED_MODEL, (event) => {
+  const model = store.get(storageKeys.SELECTED_MODEL);
+
+  event.reply(COMMUNICATION_CHANNELS.SELECTED_MODEL, model);
+});
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
