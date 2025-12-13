@@ -43,6 +43,22 @@ To package apps for the local platform:
 npm run package
 ```
 
+## Some common issues
+
+#### Access denied error thrown by `ffmpeg` while converting from `audio_in.wav` to `audio_out.wav`
+This primarily happens because the `ffmpeg` package would have been installed via Snap instead of `apt`. Snap usually sandbox packages. 
+This makes ffmpeg not able to access contents from hidden or user profile folders. To solve this, remove the snap installation using
+`sudo snap remove ffmpeg` and install using `apt`. Run the below commands to install via `apt`
+```
+sudo add-apt-repository ppa:savoury1/ffmpeg4
+sudo apt-get update
+sudo apt-get install ffmpeg
+```
+
+#### Segmentation fault
+This usually happens on newer Linux machines due to the Ubuntu's recent shift to Wayland protocol instead of x11. In such case, you need to
+clone the whisper.cpp repo, compile, and generate the whisper-cli binary file in the system that uses Wayland. 
+
 ## Maintainers
 
 - [Arunachalam](https://github.com/arunachalam-b)
