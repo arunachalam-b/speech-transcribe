@@ -46,14 +46,42 @@ button:hover {
 }
 
 .drag-bar {
-  height: 32px;
-  background: rgba(255, 255, 255, 0.15);
+  height: 24px;
+  background: rgba(0, 0, 0, 0.2);
   -webkit-app-region: drag;
-  cursor: move;
+  cursor: grab;
   user-select: none;
   -webkit-user-select: none;
   display: flex;
   align-items: center;
-  padding-left: 12px;
-  font-weight: 500;
+  justify-content: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.2s ease;
+}
+
+.drag-bar:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.drag-bar:active {
+  cursor: grabbing;
+}
+
+.drag-handle {
+  display: flex;
+  gap: 3px;
+  padding: 4px 12px;
+  border-radius: 4px;
+}
+
+.drag-dots {
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+
+.drag-bar:hover .drag-dots {
+  background: rgba(255, 255, 255, 0.8);
 }

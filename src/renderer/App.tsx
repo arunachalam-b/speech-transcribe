@@ -78,7 +78,11 @@ export default function App() {
         className="drag-bar"
         onMouseDown={handleMouseDown}
       >
-        Widget
+        <div className="drag-handle">
+          <span className="drag-dots"></span>
+          <span className="drag-dots"></span>
+          <span className="drag-dots"></span>
+        </div>
       </div>
       <Router>
         <Routes>

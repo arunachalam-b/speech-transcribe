@@ -15,6 +15,7 @@ import {
   clipboard,
   globalShortcut,
   ipcMain,
+  Menu,
   shell,
 } from 'electron';
 import log from 'electron-log';
@@ -25,7 +26,6 @@ import Store from 'electron-store';
 
 import type { Schema } from 'electron-store';
 
-import MenuBuilder from './menu';
 import { getModelPath, isFileExists, resolveHtmlPath } from './util';
 import {
   APP_MODEL_PATH,
@@ -320,8 +320,8 @@ const createWindow = async () => {
     mainWindow = null;
   });
 
-  const menuBuilder = new MenuBuilder(mainWindow);
-  menuBuilder.buildMenu();
+  // Hide the application menu bar
+  Menu.setApplicationMenu(null);
 
   // Open urls in the user's browser
   mainWindow.webContents.setWindowOpenHandler((edata) => {
