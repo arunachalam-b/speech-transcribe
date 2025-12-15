@@ -12,6 +12,7 @@ enum COMMUNICATION_CHANNELS {
   SELECTED_MODEL = 'selected-model',
   MODEL_DOWNLOAD_STATUS = 'model-download-status',
   MOVE_WINDOW = 'move-window',
+  TOGGLE_RECORDING = 'toggle-recording',
 }
 
 enum RENDERER_ROUTE_ACTION {

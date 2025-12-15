@@ -17,6 +17,7 @@ function Home() {
   const numpadEnter = useKeyPress('NumpadEnter');
 
   const isRecordingRef = useRef<boolean>(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder>();
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -53,6 +54,7 @@ function Home() {
       };
 
       mediaRecorderLocal.start();
+      mediaRecorderRef.current = mediaRecorderLocal;
       setMediaRecorder(mediaRecorderLocal);
     } catch (error) {
       console.error('Error accessing microphone:', error);
@@ -60,9 +62,10 @@ function Home() {
   }
 
   function stopRecording() {
-    if (mediaRecorder) {
+    if (mediaRecorderRef.current) {
       console.log('Stopping Recording...');
-      mediaRecorder.stop();
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current = null;
       setMediaRecorder(undefined);
       isRecordingRef.current = false;
       setIsRecording(false);
@@ -101,6 +104,15 @@ function Home() {
           alert('Please select a model to transcribe');
 
           navigate(RENDERER_ROUTE.SETTINGS);
+        }
+      },
+    );
+
+    window.electron.ipcRenderer.on(
+      COMMUNICATION_CHANNELS.TOGGLE_RECORDING,
+      () => {
+        if (isRecordingRef.current) {
+          stopRecording();
         }
       },
     );

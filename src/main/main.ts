@@ -308,13 +308,12 @@ const createWindow = async () => {
 
   globalShortcut.register('Alt+Shift+X', async () => {
     if (mainWindow?.isVisible()) {
-      // mainWindow.hide();
-      console.log('Focusing on the window');
-      mainWindow.setFocusable(true);
-      mainWindow.focus();
+      // Window is visible, send signal to stop recording and process
+      console.log('Sending toggle recording signal');
+      mainWindow.webContents.send(COMMUNICATION_CHANNELS.TOGGLE_RECORDING);
     } else {
+      // Window is hidden, show it (recording starts on focus)
       mainWindow?.showInactive();
-      // mainWindow?.focus();
     }
   });
 
