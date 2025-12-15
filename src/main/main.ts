@@ -28,7 +28,6 @@ import type { Schema } from 'electron-store';
 
 import { getModelPath, isFileExists, resolveHtmlPath } from './util';
 import {
-  APP_MODEL_PATH,
   APP_WHISPER_PATH,
   COMMUNICATION_CHANNELS,
   storageKeys,
@@ -92,7 +91,7 @@ const transcribeAudio = async (filePath: string) => {
   }, 100);
 };
 
-ipcMain.on("move-window", (e, { dx, dy }) => {
+ipcMain.on(COMMUNICATION_CHANNELS.MOVE_WINDOW, (_event, { dx, dy }) => {
   if (mainWindow) {
     const [x, y] = mainWindow.getPosition();
     mainWindow.setPosition(x + dx, y + dy);
@@ -107,7 +106,7 @@ ipcMain.on(COMMUNICATION_CHANNELS.IPC_EXAMPLE, async (event, arg) => {
 
 ipcMain.on(
   COMMUNICATION_CHANNELS.SAVE_AUDIO,
-  (event, audioBuffer: ArrayBuffer) => {
+  (_event, audioBuffer: ArrayBuffer) => {
     // const tempPath = execSync('pwd').toString().trim();
     const tempPath = `${app.getPath('userData')}/blob_storage`;
 
@@ -283,10 +282,10 @@ const createWindow = async () => {
     height: 728,
     icon: getAssetPath('icon.png'),
     // frame: false,
-    transparent: true,
+    // transparent: true,
     focusable: false,
-    alwaysOnTop: true,
-    skipTaskbar: true,
+    // alwaysOnTop: true,
+    // skipTaskbar: true,
     webPreferences: {
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
@@ -309,7 +308,10 @@ const createWindow = async () => {
 
   globalShortcut.register('Alt+Shift+X', async () => {
     if (mainWindow?.isVisible()) {
-      mainWindow.hide();
+      // mainWindow.hide();
+      console.log('Focusing on the window');
+      mainWindow.setFocusable(true);
+      mainWindow.focus();
     } else {
       mainWindow?.showInactive();
       // mainWindow?.focus();

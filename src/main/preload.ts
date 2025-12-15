@@ -37,7 +37,7 @@ const electronHandler = {
       ipcRenderer.removeListener(channel, (_event, ...args) => func(...args));
     },
     move(dx: number, dy: number) {
-      ipcRenderer.send("move-window", { dx, dy });
+      ipcRenderer.send(COMMUNICATION_CHANNELS.MOVE_WINDOW, { dx, dy });
     },
   },
 };
