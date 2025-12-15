@@ -31,6 +31,7 @@ button {
   cursor: pointer;
   opacity: 0.9;
   width: fit-content;
+  -webkit-app-region: no-drag;
 }
 
 button:hover {
@@ -42,4 +43,17 @@ button:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.drag-bar {
+  height: 32px;
+  background: rgba(255, 255, 255, 0.15);
+  -webkit-app-region: drag;
+  cursor: move;
+  user-select: none;
+  -webkit-user-select: none;
+  display: flex;
+  align-items: center;
+  padding-left: 12px;
+  font-weight: 500;
 }

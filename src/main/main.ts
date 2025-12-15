@@ -92,6 +92,13 @@ const transcribeAudio = async (filePath: string) => {
   }, 100);
 };
 
+ipcMain.on("move-window", (e, { dx, dy }) => {
+  if (mainWindow) {
+    const [x, y] = mainWindow.getPosition();
+    mainWindow.setPosition(x + dx, y + dy);
+  }
+});
+
 ipcMain.on(COMMUNICATION_CHANNELS.IPC_EXAMPLE, async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
   console.log(msgTemplate(arg));
@@ -275,6 +282,11 @@ const createWindow = async () => {
     width: 1024,
     height: 728,
     icon: getAssetPath('icon.png'),
+    // frame: false,
+    transparent: true,
+    focusable: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
     webPreferences: {
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
@@ -291,7 +303,7 @@ const createWindow = async () => {
     if (process.env.START_MINIMIZED) {
       mainWindow.minimize();
     } else {
-      mainWindow.show();
+      mainWindow.showInactive();
     }
   });
 
@@ -299,8 +311,8 @@ const createWindow = async () => {
     if (mainWindow?.isVisible()) {
       mainWindow.hide();
     } else {
-      mainWindow?.show();
-      mainWindow?.focus();
+      mainWindow?.showInactive();
+      // mainWindow?.focus();
     }
   });
 
