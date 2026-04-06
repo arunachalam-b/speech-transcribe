@@ -1,14 +1,63 @@
 .container {
   display: flex;
   flex-direction: column;
+  padding-inline: 24px;
+}
+
+.headerContainer {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  column-gap: 16px;
+  padding-block: 8px;
+}
+
+.backButton {
+  background-color: unset;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.backArrowIcon {
+  font-size: 42px;
+  font-weight: bolder;
+  cursor: pointer;
+  color: #ffffff;
+  line-height: 0;
+}
+
+.bodyContainer {
 }
 
 .content {
   padding-block: 10px;
-  padding-inline: 30px;
   display: flex;
   column-gap: 15px;
   align-items: flex-end;
+}
+
+.progressContainer {
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  width: 280px;
+}
+
+.progress {
+  width: 280px;
+  height: 48px;
+}
+
+.downloadPercentage {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  text-align: center;
+  vertical-align: middle;
+  align-self: center;
 }
 
 button {

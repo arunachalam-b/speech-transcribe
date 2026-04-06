@@ -6,7 +6,6 @@ import type { ChangeEvent } from 'react';
 import { AVAILABLE_MODELS, COMMUNICATION_CHANNELS } from '../../../constants';
 
 import './index.css';
-import { Spinner } from '../../components';
 
 const NO_OPTION = 'NO_OPTION';
 
@@ -19,6 +18,8 @@ function Settings() {
   const [isSelectedModelExists, setIsSelectedModelExists] =
     useState<boolean>(true);
   const [isDownloadingModel, setIsDownloadingModel] = useState<boolean>(false);
+  const [modelDownloadPercentage, setModelDownloadPercentage] =
+    useState<number>(0);
   const [message, setMessage] = useState(null);
 
   function startChannelListeners() {
@@ -57,6 +58,10 @@ function Settings() {
         }
 
         setIsDownloadingModel(false);
+        console.log('React reset model download percentage...', {
+          modelDownloadPercentage,
+        });
+        setModelDownloadPercentage(0);
       },
     );
 
@@ -64,6 +69,20 @@ function Settings() {
       COMMUNICATION_CHANNELS.MODEL_DOWNLOAD_STATUS,
       (data: any) => {
         setMessage(data);
+      },
+    );
+
+    window.electron.ipcRenderer.on(
+      COMMUNICATION_CHANNELS.MODEL_DOWNLOAD_PERCENTAGE,
+      (args) => {
+        console.log('React model download percentage: ', {
+          args,
+          argsType: typeof args,
+          modelDownloadPercentage,
+        });
+        setTimeout(() => {
+          setModelDownloadPercentage(args as number);
+        }, 2000);
       },
     );
   }
@@ -110,73 +129,53 @@ function Settings() {
 
   return (
     <div className="container">
-      <div
-        style={{
-          display: 'flex',
-          flex: 1,
-          alignItems: 'center',
-          columnGap: 20,
-          paddingInline: 20,
-          paddingBlock: 10,
-        }}
-      >
-        <button
-          type="button"
-          onClick={onClickBack}
-          style={{
-            backgroundColor: 'unset',
-            padding: 0,
-            display: 'flex',
-            alignItems: 'center',
-          }}
-        >
-          <span
-            style={{
-              fontSize: 42,
-              fontWeight: 'bolder',
-              cursor: 'pointer',
-              color: '#FFFFFF',
-              lineHeight: 0,
-            }}
-          >
-            &#129128;
-          </span>
+      <div className="headerContainer">
+        <button type="button" onClick={onClickBack} className="backButton">
+          <span className="backArrowIcon">&#129128;</span>
         </button>
         <h2>Settings</h2>
       </div>
-      <div className="content">
-        <label htmlFor="modelSelect" id="modelSelectLabel">
-          <span>Select Model to use</span>
-          <select
-            id="modelSelect"
-            disabled={isDownloadingModel}
-            value={selectedModel}
-            onChange={onSelectModel}
-          >
-            <option value={NO_OPTION}>Select a model</option>
-            {AVAILABLE_MODELS.map((model) => (
-              <option key={model} value={model}>
-                {model.toUpperCase()}
-              </option>
-            ))}
-          </select>
-        </label>
-        {!isSelectedModelExists && selectedModel !== NO_OPTION && (
-          <button
-            type="button"
-            onClick={onClickDownloadModel}
-            disabled={selectedModel === NO_OPTION || isDownloadingModel}
-          >
-            Download
-          </button>
+      <div className="bodyContainer">
+        <div className="content">
+          <label htmlFor="modelSelect" id="modelSelectLabel">
+            <span>Select Model to use</span>
+            <select
+              id="modelSelect"
+              disabled={isDownloadingModel}
+              value={selectedModel}
+              onChange={onSelectModel}
+            >
+              <option value={NO_OPTION}>Select a model</option>
+              {AVAILABLE_MODELS.map((model) => (
+                <option key={model} value={model}>
+                  {model.toUpperCase()}
+                </option>
+              ))}
+            </select>
+          </label>
+          {!isSelectedModelExists && selectedModel !== NO_OPTION && (
+            <button
+              type="button"
+              onClick={onClickDownloadModel}
+              disabled={selectedModel === NO_OPTION || isDownloadingModel}
+            >
+              Download
+            </button>
+          )}
+        </div>
+        {isDownloadingModel && (
+          <div className="progressContainer">
+            <progress
+              className="progress"
+              value={modelDownloadPercentage}
+              max={100}
+            />
+            <span className="downloadPercentage">
+              {modelDownloadPercentage}%
+            </span>
+          </div>
         )}
       </div>
-      {isDownloadingModel && (
-        <div className="content">
-          <Spinner />
-          <p>{message}</p>
-        </div>
-      )}
     </div>
   );
 }

@@ -84,7 +84,7 @@ const transcribeAudio = async (filePath: string) => {
     setTimeout(() => {
       if (mainWindow) {
         mainWindow.close();
-      }  
+      }
     }, 1000);
     if (mainWindow) {
       mainWindow.hide();
@@ -178,7 +178,10 @@ ipcMain.on(COMMUNICATION_CHANNELS.DONWLOAD_MODEL, async (event, model) => {
     execSync(`cp ${APP_WHISPER_PATH}/download-ggml-model.sh ${modelBasePath}`);
     execSync(`cd ${modelBasePath}`);
     await new Promise((resolve, reject) => {
-      const child = spawn(`cd ${modelBasePath} && ./download-ggml-model.sh  ${model}`, {shell: true});
+      const child = spawn(
+        `cd ${modelBasePath} && ./download-ggml-model.sh  ${model}`,
+        { shell: true },
+      );
       child.stdout.on('data', (data) => {
         console.log(`Child says: ${data}`);
         mainWindow?.webContents.send(
@@ -186,18 +189,25 @@ ipcMain.on(COMMUNICATION_CHANNELS.DONWLOAD_MODEL, async (event, model) => {
           `Model download in-progress...`,
         );
       });
-      
+
       child.stderr.on('data', (data) => {
         console.log(`Latest status update: ${data}`);
         const latestStatus = String(data);
-        if (latestStatus.includes("%")) {
+        if (latestStatus.includes('%')) {
+          const downloadPercentage = latestStatus.split('%')[0].slice(-3);
+
+          mainWindow?.webContents.send(
+            COMMUNICATION_CHANNELS.MODEL_DOWNLOAD_PERCENTAGE,
+            downloadPercentage,
+          );
+
           mainWindow?.webContents.send(
             COMMUNICATION_CHANNELS.MODEL_DOWNLOAD_STATUS,
-            `Downloading ${latestStatus.split("%")[0].slice(-3)}%...`,
+            `Downloading ${downloadPercentage}%...`,
           );
         }
       });
-      
+
       child.on('close', (code) => {
         console.log(`Child exited with code ${code}`);
         mainWindow?.webContents.send(
